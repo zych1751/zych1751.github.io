@@ -166,8 +166,8 @@
           this.j += 1;
           this.nextDir = 3;
 
-          myMap[this.j][this.j] = color1;
-          myMap[this.j][this.j-1] = color2;
+          myMap[this.i][this.j] = color1;
+          myMap[this.i][this.j-1] = color2;
         }
         else if(this.j == 5 && this.nextDir == 2) {
           myMap[this.i][this.j] = -1;
@@ -176,8 +176,8 @@
           this.j -= 1;
           this.nextDir = 1;
 
-          myMap[this.j][this.j] = color1;
-          myMap[this.j][this.j+1] = color2;
+          myMap[this.i][this.j] = color1;
+          myMap[this.i][this.j+1] = color2;
         }
         else {
           myMap[this.i + di[this.nextDir]][this.j + dj[this.nextDir]] = -1;
