@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    canvas {
+      border:1px solid #d3d3d3;
+      background-color: #f1f1f1;
+    }
+  </style>
+</head>
+<body onload="startGame()">
+
+<script>
+
+  var currentPuyo;
+  var myMap; // color information, -1 : empty
+  var endFlag;
+  var puyoSize;
+  var colorNum;
+  var gameTime;
+  var maxChain;
+  var curChain;
+  var eventId;
+  var cnt;
+
+  function startGame() {
+    gameTime = 20;
+    colorNum = 4;
+    cnt = new Array();
+    for(var i = 0; i < colorNum; i++)
+      cnt[i] = 0;
+
+    visited1 = new Array();
+    visited2 = new Array();
+    for(var i = 0; i < 13; i++) {
+      visited1[i] = new Array();
+      visited2[i] = new Array();
+    }
+
+    myMap = new Array();
+    for(var i = 0; i < 13; i++) {
+      myMap[i] = new Array();
+      for(var j = 0; j < 6; j++)
+        myMap[i][j] = -1;
+    }
+    currentPuyo = null;
+    endFlag = false;
+    crashing = false;
+    puyoSize = 40;
+    maxChain = curChain = 0;
+    myGameArea.start();
+    window.addEventListener('keydown',move);
+  }
+
+  var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+      this.canvas.width = puyoSize*6;
+      this.canvas.height = puyoSize*13;
+      this.context = this.canvas.getContext("2d");
+      document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+      this.frameNo = 0;
+      eventId = setInterval(updateGameArea, 20);
+    },
+    clear : function() {
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+  }
+
+  var di = [-1, 0, 1, 0];
+  var dj = [0, 1, 0, -1];
+
+  function puyo(color1, color2) {
+    this.color1 = color1;
+    this.color2 = color2;
+    this.i = 1;
+    this.j = 2;
+    this.nextDir = 0; // 0 : up, 1 : right, 2 : down, 3 : left
+
+    cnt[color1] += 1;
+    cnt[color2] += 1;
+
+    if(myMap[this.i][this.j] != -1 || myMap[this.i-1][this.j] != -1) {
+      endFlag = true;
+      window.removeEventListener('keydown', move);
+      clearInterval(eventId);
+      var img = new Image();
+      img.onload = function (){
+        myGameArea.context.drawImage(img, puyoSize, 5*puyoSize, puyoSize*4, 2*puyoSize);
+      }
+      img.src = 'game_over.jpg';
+    }
+    else {
+      myMap[this.i][this.j] = this.color1;
+      myMap[this.i-1][this.j] = this.color2;
+    }
+
+    this.canMove = function(dir) {
+      var i1 = this.i, j1 = this.j;
+      var i2 = this.i + di[this.nextDir], j2 = this.j + dj[this.nextDir];
+
+      if(i1 == 12 || i2 == 12)  return false;
+      if(!(i1+di[dir] == i2 && j1+dj[dir] == j2) && myMap[i1+di[dir]][j1+dj[dir]] != -1)
+        return false;
+      if(!(i2+di[dir] == i1 && j2+dj[dir] == j1) && myMap[i2+di[dir]][j2+dj[dir]] != -1)
+        return false;
+      return true;
+    }
+
+    this.Move = function(dir) {
+      if(this.canMove(dir)) {
+        myMap[this.i][this.j] = -1;
+        myMap[this.i+di[this.nextDir]][this.j+dj[this.nextDir]] = -1;
+        this.i += di[dir];
+        this.j += dj[dir];
+        myMap[this.i][this.j] = this.color1;
+        myMap[this.i+di[this.nextDir]][this.j+dj[this.nextDir]] = this.color2;
+      }
+    }
+
+    // 0 is counterclockwise, 1 is clockwise
+    this.canRotate = function(dir) {
+      if(dir == 0) {
+        // 벽에 붙은경우
+        if(this.j == 0 && this.nextDir == 0) {
+          if(myMap[this.i][1] == -1)  return true;
+          return false;
+        }
+        else if(this.j == 5 && this.nextDir == 2) {
+          if(myMap[this.i][4] == -1)  return true;
+          return false;
+        }
+        // 나머지경우
+        else {
+          var ndir = (this.nextDir+3)%4;
+          if (myMap[this.i + di[ndir]][this.j + dj[ndir]] == -1) return true;
+          return false;
+        }
+      }
+      else {
+        // 벽에 붙은경우
+        if(this.j == 0 && this.nextDir == 2) {
+          if(myMap[this.i][1] == -1)  return true;
+          return false;
+        }
+        else if(this.j == 5 && this.nextDir == 0) {
+          if(myMap[this.i][4] == -1)  return true;
+          return false;
+        }
+        // 나머지경우
+        else {
+          var ndir = (this.nextDir + 1) % 4;
+          if (myMap[this.i + di[ndir]][this.j + dj[ndir]] == -1) return true;
+          return false;
+        }
+      }
+    }
+
+    this.Rotate = function(dir) {
+      if(dir == 0) {
+        if(this.j == 0 && this.nextDir == 0) {
+          myMap[this.i][this.j] = -1;
+          myMap[this.i-1][this.j] = -1;
+
+          this.j += 1;
+          this.nextDir = 3;
+
+          myMap[this.j][this.j] = color1;
+          myMap[this.j][this.j-1] = color2;
+        }
+        else if(this.j == 5 && this.nextDir == 2) {
+          myMap[this.i][this.j] = -1;
+          myMap[this.i+1][this.j] = -1;
+
+          this.j -= 1;
+          this.nextDir = 1;
+
+          myMap[this.j][this.j] = color1;
+          myMap[this.j][this.j+1] = color2;
+        }
+        else {
+          myMap[this.i + di[this.nextDir]][this.j + dj[this.nextDir]] = -1;
+          this.nextDir = (this.nextDir + 3) % 4;
+          myMap[this.i + di[this.nextDir]][this.j + dj[this.nextDir]] = color2;
+        }
+      }
+      else {
+        if(this.j == 0 && this.nextDir == 2) {
+          myMap[this.i][this.j] = -1;
+          myMap[this.i+1][this.j] = -1;
+
+          this.j += 1;
+          this.nextDir = 3;
+
+          myMap[this.i][this.j] = color1;
+          myMap[this.i][this.j-1] = color2;
+        }
+        else if(this.j == 5 && this.nextDir == 0) {
+          myMap[this.i][this.j] = -1;
+          myMap[this.i-1][this.j] = -1;
+
+          this.j -= 1;
+          this.nextDir = 1;
+
+          myMap[this.i][this.j] = color1;
+          myMap[this.i][this.j+1] = color2;
+        }
+        else {
+          myMap[this.i + di[this.nextDir]][this.j + dj[this.nextDir]] = -1;
+          this.nextDir = (this.nextDir + 1) % 4;
+          myMap[this.i + di[this.nextDir]][this.j + dj[this.nextDir]] = color2;
+        }
+      }
+    }
+
+    this.update = function() {
+      if(this.canMove(2)) {
+        var i1 = this.i, j1 = this.j;
+        var i2 = this.i + di[this.nextDir], j2 = this.j + dj[this.nextDir];
+        myMap[i1][j1] = -1;
+        myMap[i2][j2] = -1;
+
+        this.i++;
+        i1++;
+        i2++;
+        myMap[i1][j1] = this.color1;
+        myMap[i2][j2] = this.color2;
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+  }
+
+
+  function move(event) {
+    if(currentPuyo == null) return;
+    // left arrow
+    if(event.keyCode == 37) {
+      if(currentPuyo.canMove(3)) {
+        currentPuyo.Move(3);
+      }
+    }
+    // right arrow
+    if(event.keyCode == 39) {
+      if(currentPuyo.canMove(1)) {
+        currentPuyo.Move(1);
+      }
+    }
+    // down arrow
+    if(event.keyCode == 40) {
+      if(currentPuyo.canMove(2)) {
+        currentPuyo.Move(2);
+      }
+    }
+
+    // z 90, x 88
+    // z key, counterclockwise
+    if(event.keyCode == 90) {
+      if(currentPuyo.canRotate(0)) {
+        currentPuyo.Rotate(0);
+      }
+    }
+    // x key, clockwise
+    if(event.keyCode == 88) {
+      if(currentPuyo.canRotate(1)) {
+        currentPuyo.Rotate(1);
+      }
+    }
+  }
+
+  var crashing;
+
+  function mapUpdate() {
+    for (var i = 0; i < 13; i++) for (var j = 0; j < 6; j++) {
+      ctx = myGameArea.context;
+      switch (myMap[i][j]) {
+        case 0:
+          ctx.fillStyle = 'red';
+          break;
+        case 1:
+          ctx.fillStyle = 'blue';
+          break;
+        case 2:
+          ctx.fillStyle = 'yellow';
+          break;
+        case 3:
+          ctx.fillStyle = 'green';
+          break;
+        default:
+          continue;
+      }
+      ctx.fillRect(j * puyoSize, i * puyoSize, puyoSize, puyoSize);
+    }
+  }
+
+  var visited1, visited2;
+
+  function push_down() {
+    for(var j = 0; j < 6; j++) {
+      var queue = [];
+      for(var i = 12; i >= 0; i--) {
+        if(myMap[i][j] == -1) {
+          queue.push(i);
+        }
+        else {
+          if(queue.length != 0) {
+            var val = queue.shift();
+            myMap[val][j] = myMap[i][j];
+            myMap[i][j] = -1;
+            queue.push(i);
+          }
+        }
+      }
+    }
+  }
+
+  function crash_dfs(i, j, explode, color) {
+    if(explode) {
+      myMap[i][j] = -1;
+      visited2[i][j] = true;
+      for(var k = 0; k < 4; k++) {
+        var ni = i+di[k], nj = j+dj[k];
+        if(ni >= 0 && ni < 13 && nj >= 0 && nj < 6 && !visited2[ni][nj] && myMap[ni][nj] == color) {
+          crash_dfs(ni, nj, explode, color);
+        }
+      }
+      return 0;
+    }
+    else {
+      var ret = 1;
+      visited1[i][j] = true;
+      for(var k = 0; k < 4; k++) {
+        var ni = i+di[k], nj = j+dj[k];
+        if(ni >= 0 && ni < 13 && nj >= 0 && nj < 6 && !visited1[ni][nj] && myMap[ni][nj] == color) {
+          ret += crash_dfs(ni, nj, explode, color);
+        }
+      }
+      return ret;
+    }
+  }
+
+  function crash() {
+    for(var i = 0; i < 13; i++) for(var j = 0; j < 6; j++)
+      visited1[i][j] = visited2[i][j] = false;
+
+    var ret = false;
+    for(var i = 0; i < 13; i++) for(var j = 0; j < 6; j++) {
+      if(!visited1[i][j] && myMap[i][j] != -1) {
+        if(crash_dfs(i, j, false, myMap[i][j]) >= 4) {
+          ret = true;
+          crash_dfs(i, j, true, myMap[i][j]);
+        }
+      }
+    }
+    if(ret) push_down();
+    return ret;
+  }
+
+  function updateGameArea() {
+    var score = document.getElementById('score');
+    score.textContent = 'Chain: ' + curChain + ' maxChain: ' + maxChain;
+
+    if(endFlag) {
+      return;
+    }
+
+    myGameArea.clear();
+    myGameArea.frameNo += 1;
+
+    if(myGameArea.frameNo % gameTime == 0) {
+      if(crashing) {
+        if(!crash()) {
+          crashing = false;
+        }
+        else {
+          curChain += 1;
+          maxChain = Math.max(maxChain, curChain);
+        }
+      }
+      else if(currentPuyo == null) {
+        var color1, color2;
+        var minval = 10000;
+        for(var i = 0; i < colorNum; i++)
+         minval = Math.min(minval, cnt[i]);
+
+        while(true) {
+          color1 = Math.floor(Math.random()*colorNum);
+          if(cnt[color1] <= minval+5) break;
+        }
+        while(true) {
+          color2 = Math.floor(Math.random()*colorNum);
+          if(cnt[color2] <= minval+5) break;
+        }
+        currentPuyo = new puyo(color1, color2);
+      }
+      else {
+        if(!currentPuyo.update()) {
+          push_down();
+          currentPuyo = null;
+          if(crash()) {
+            curChain = 1;
+            maxChain = Math.max(maxChain, curChain);
+            crashing = true;
+          }
+        }
+      }
+    }
+
+    mapUpdate();
+  }
+</script>
+
+<br>
+<p> you can arrow key and 'z', 'x'</p>
+<div id="score"></div>
+<form><input type="submit"></form>
+</body>
+</html>
