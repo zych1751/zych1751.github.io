@@ -25,6 +25,7 @@
   var cnt;
 
   function startGame() {
+    firstMake = true;
     gameTime = 20;
     colorNum = 4;
     cnt = new Array();
@@ -49,6 +50,7 @@
     crashing = false;
     puyoSize = 40;
     maxChain = curChain = 0;
+    myGameArea2.start();
     myGameArea.start();
     window.addEventListener('keydown',move);
   }
@@ -359,13 +361,15 @@
     return ret;
   }
 
+  var firstMake;
+  var ncolor1 = -1, ncolor2 = -1;
+
   function updateGameArea() {
     var score = document.getElementById('score');
     score.textContent = 'Chain: ' + curChain + ' maxChain: ' + maxChain;
 
-    if(endFlag) {
+    if(endFlag)
       return;
-    }
 
     myGameArea.clear();
     myGameArea.frameNo += 1;
@@ -386,15 +390,35 @@
         for(var i = 0; i < colorNum; i++)
          minval = Math.min(minval, cnt[i]);
 
-        while(true) {
-          color1 = Math.floor(Math.random()*colorNum);
-          if(cnt[color1] <= minval+5) break;
+        if(firstMake) {
+          while (true) {
+            color1 = Math.floor(Math.random() * colorNum);
+            if (cnt[color1] <= minval + 5) break;
+          }
+          while (true) {
+            color2 = Math.floor(Math.random() * colorNum);
+            if (cnt[color2] <= minval + 5) break;
+          }
+          firstMake = false;
         }
-        while(true) {
-          color2 = Math.floor(Math.random()*colorNum);
-          if(cnt[color2] <= minval+5) break;
+        else {
+          color1 = ncolor1;
+          color2 = ncolor2;
         }
         currentPuyo = new puyo(color1, color2);
+
+        minval = 10000;
+        for(var i = 0; i < colorNum; i++)
+          minval = Math.min(minval, cnt[i]);
+
+        while (true) {
+          ncolor1 = Math.floor(Math.random() * colorNum);
+          if (cnt[ncolor1] <= minval + 5) break;
+        }
+        while (true) {
+          ncolor2 = Math.floor(Math.random() * colorNum);
+          if (cnt[ncolor2] <= minval + 5) break;
+        }
       }
       else {
         if(!currentPuyo.update()) {
@@ -410,6 +434,62 @@
     }
 
     mapUpdate();
+  }
+</script>
+
+<script>
+
+  var myGameArea2 = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+      this.canvas.width = puyoSize*2;
+      this.canvas.height = puyoSize*5;
+      this.context = this.canvas.getContext("2d");
+      document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+      this.frameNo = 0;
+      eventId = setInterval(updateSideArea, 20);
+    },
+    clear : function() {
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+  }
+
+  function updateSideArea() {
+    if(ncolor1 == -1 || ncolor2 == -1)   return;
+
+    var ctx = myGameArea2.context;
+    switch (ncolor2) {
+      case 0:
+        ctx.fillStyle = 'red';
+        break;
+      case 1:
+        ctx.fillStyle = 'blue';
+        break;
+      case 2:
+        ctx.fillStyle = 'yellow';
+        break;
+      case 3:
+        ctx.fillStyle = 'green';
+        break;
+    }
+    ctx.fillRect(puyoSize * 0.5, puyoSize*1.5, puyoSize, puyoSize);
+
+    ctx = myGameArea2.context;
+    switch (ncolor1) {
+      case 0:
+        ctx.fillStyle = 'red';
+        break;
+      case 1:
+        ctx.fillStyle = 'blue';
+        break;
+      case 2:
+        ctx.fillStyle = 'yellow';
+        break;
+      case 3:
+        ctx.fillStyle = 'green';
+        break;
+    }
+    ctx.fillRect(puyoSize * 0.5, puyoSize*2.5, puyoSize, puyoSize);
   }
 </script>
 
