@@ -3,13 +3,30 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
+    p, #score, form{
+      text-align: center;
+      margin-right : 15%;
+    }
     canvas {
       border:1px solid #d3d3d3;
       background-color: #f1f1f1;
+      margin: 0 auto;
     }
   </style>
+  <script src="jquery-2.1.4.min.js"></script>
 </head>
 <body onload="startGame()">
+
+
+<div style="margin: 0 auto; width: 50%">
+  <canvas id="canvas1"></canvas>
+  <canvas id="canvas2"></canvas>
+</div>
+
+<br>
+<p> you can use arrow key and 'z', 'x'</p>
+<div id="score"></div>
+<form><input type="submit"></form>
 
 <script>
 
@@ -23,45 +40,65 @@
   var curChain;
   var eventId;
   var cnt;
+  var img;
 
-  function startGame() {
+  function init() {
     firstMake = true;
     gameTime = 20;
     colorNum = 4;
     cnt = new Array();
-    for(var i = 0; i < colorNum; i++)
+    for (var i = 0; i < colorNum; i++)
       cnt[i] = 0;
 
     visited1 = new Array();
     visited2 = new Array();
-    for(var i = 0; i < 13; i++) {
+    for (var i = 0; i < 13; i++) {
       visited1[i] = new Array();
       visited2[i] = new Array();
     }
 
     myMap = new Array();
-    for(var i = 0; i < 13; i++) {
+    for (var i = 0; i < 13; i++) {
       myMap[i] = new Array();
-      for(var j = 0; j < 6; j++)
+      for (var j = 0; j < 6; j++)
         myMap[i][j] = -1;
     }
     currentPuyo = null;
     endFlag = false;
     crashing = false;
-    puyoSize = 40;
     maxChain = curChain = 0;
-    myGameArea2.start();
     myGameArea.start();
-    window.addEventListener('keydown',move);
+    myGameArea2.start();
+    window.addEventListener('keydown', move);
+  }
+
+  function startGame() {
+    puyoSize = 40;
+
+    var cnt = 0;
+    img = new Array();
+    for(var i = 0; i < 4; i++) {
+      img[i] = new Array();
+      for(var j = 0; j < 16; j++) {
+        img[i][j] = new Image();
+        img[i][j].src = "https://raw.githubusercontent.com/zych1751/zych1751.github.io/master/img/sonic%2520Puyo%20%5Bwww.imagesplitter.net%5D-"+i+"-"+j+".png";
+
+        img[i][j].onload = function() {
+          cnt++;
+          if(cnt == 64) {
+            init();
+          }
+        }
+      }
+    }
   }
 
   var myGameArea = {
-    canvas : document.createElement("canvas"),
+    canvas : document.getElementById("canvas1"),
     start : function() {
       this.canvas.width = puyoSize*6;
       this.canvas.height = puyoSize*13;
       this.context = this.canvas.getContext("2d");
-      document.body.insertBefore(this.canvas, document.body.childNodes[0]);
       this.frameNo = 0;
       eventId = setInterval(updateGameArea, 20);
     },
@@ -72,6 +109,9 @@
 
   var di = [-1, 0, 1, 0];
   var dj = [0, 1, 0, -1];
+
+  var ddi = [1, -1, 0, 0];
+  var ddj = [0, 0, 1, -1];
 
   function puyo(color1, color2) {
     this.color1 = color1;
@@ -124,7 +164,7 @@
     // 0 is counterclockwise, 1 is clockwise
     this.canRotate = function(dir) {
       if(dir == 0) {
-        // º®¿¡ ºÙÀº°æ¿ì
+        // ë²½ì— ë¶™ì€ê²½ìš°
         if(this.j == 0 && this.nextDir == 0) {
           if(myMap[this.i][1] == -1)  return true;
           return false;
@@ -133,7 +173,7 @@
           if(myMap[this.i][4] == -1)  return true;
           return false;
         }
-        // ³ª¸ÓÁö°æ¿ì
+        // ë‚˜ë¨¸ì§€ê²½ìš°
         else {
           var ndir = (this.nextDir+3)%4;
           if (myMap[this.i + di[ndir]][this.j + dj[ndir]] == -1) return true;
@@ -141,7 +181,7 @@
         }
       }
       else {
-        // º®¿¡ ºÙÀº°æ¿ì
+        // ë²½ì— ë¶™ì€ê²½ìš°
         if(this.j == 0 && this.nextDir == 2) {
           if(myMap[this.i][1] == -1)  return true;
           return false;
@@ -150,7 +190,7 @@
           if(myMap[this.i][4] == -1)  return true;
           return false;
         }
-        // ³ª¸ÓÁö°æ¿ì
+        // ë‚˜ë¨¸ì§€ê²½ìš°
         else {
           var ndir = (this.nextDir + 1) % 4;
           if (myMap[this.i + di[ndir]][this.j + dj[ndir]] == -1) return true;
@@ -275,26 +315,23 @@
 
   var crashing;
 
+  function getShape(i, j) {
+    var ret = 0;
+    for(var k = 0; k < 4; k++) {
+      var ni = i+ddi[k], nj = j+ddj[k];
+      if(ni >= 0 && ni < 13 && nj >= 0 && nj < 6 && myMap[i][j] == myMap[ni][nj])
+        ret += (1<<k);
+    }
+    return ret;
+  }
+
   function mapUpdate() {
     for (var i = 0; i < 13; i++) for (var j = 0; j < 6; j++) {
       ctx = myGameArea.context;
-      switch (myMap[i][j]) {
-        case 0:
-          ctx.fillStyle = 'red';
-          break;
-        case 1:
-          ctx.fillStyle = 'blue';
-          break;
-        case 2:
-          ctx.fillStyle = 'yellow';
-          break;
-        case 3:
-          ctx.fillStyle = 'green';
-          break;
-        default:
-          continue;
+      var color = myMap[i][j], shape = getShape(i, j);
+      if(color >= 0) {
+        ctx.drawImage(img[color][shape], j*puyoSize, i*puyoSize, puyoSize, puyoSize);
       }
-      ctx.fillRect(j * puyoSize, i * puyoSize, puyoSize, puyoSize);
     }
   }
 
@@ -388,7 +425,7 @@
         var color1, color2;
         var minval = 10000;
         for(var i = 0; i < colorNum; i++)
-         minval = Math.min(minval, cnt[i]);
+          minval = Math.min(minval, cnt[i]);
 
         if(firstMake) {
           while (true) {
@@ -440,12 +477,11 @@
 <script>
 
   var myGameArea2 = {
-    canvas : document.createElement("canvas"),
+    canvas : document.getElementById("canvas2"),
     start : function() {
       this.canvas.width = puyoSize*2;
       this.canvas.height = puyoSize*5;
       this.context = this.canvas.getContext("2d");
-      document.body.insertBefore(this.canvas, document.body.childNodes[0]);
       this.frameNo = 0;
       eventId = setInterval(updateSideArea, 20);
     },
@@ -457,46 +493,18 @@
   function updateSideArea() {
     if(ncolor1 == -1 || ncolor2 == -1)   return;
 
+    myGameArea2.clear();
     var ctx = myGameArea2.context;
-    switch (ncolor2) {
-      case 0:
-        ctx.fillStyle = 'red';
-        break;
-      case 1:
-        ctx.fillStyle = 'blue';
-        break;
-      case 2:
-        ctx.fillStyle = 'yellow';
-        break;
-      case 3:
-        ctx.fillStyle = 'green';
-        break;
-    }
-    ctx.fillRect(puyoSize * 0.5, puyoSize*1.5, puyoSize, puyoSize);
+    var shape = 0;
+    if(ncolor2 == ncolor1)  shape = 1;
+    ctx.drawImage(img[ncolor2][shape], puyoSize * 0.5, puyoSize*1.5, puyoSize, puyoSize);
 
     ctx = myGameArea2.context;
-    switch (ncolor1) {
-      case 0:
-        ctx.fillStyle = 'red';
-        break;
-      case 1:
-        ctx.fillStyle = 'blue';
-        break;
-      case 2:
-        ctx.fillStyle = 'yellow';
-        break;
-      case 3:
-        ctx.fillStyle = 'green';
-        break;
-    }
-    ctx.fillRect(puyoSize * 0.5, puyoSize*2.5, puyoSize, puyoSize);
+    shape = 0;
+    if(ncolor2 == ncolor1)  shape = 2;
+    ctx.drawImage(img[ncolor1][shape], puyoSize * 0.5, puyoSize*2.5, puyoSize, puyoSize);
   }
 </script>
 
-
-<br>
-<p> you can use arrow key and 'z', 'x'</p>
-<div id="score"></div>
-<form><input type="submit"></form>
 </body>
 </html>
