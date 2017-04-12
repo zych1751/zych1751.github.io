@@ -3,6 +3,10 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
+    html {
+      background: url(background.png);
+      background-size: 100% auto;
+    }
     p, #score, form{
       text-align: center;
     }
@@ -12,7 +16,6 @@
     canvas {
       border:1px solid #d3d3d3;
       background-color: #f1f1f1;
-      margin: 0 auto;
     }
   </style>
   <script src="jquery-2.1.4.min.js"></script>
@@ -20,7 +23,7 @@
 <body onload="startGame()">
 
 
-<div style="margin: 0 auto; width: 50%">
+<div style="margin: 3% auto; width: 50%;">
   <canvas id="canvas1"></canvas>
   <canvas id="canvas2"></canvas>
 </div>
