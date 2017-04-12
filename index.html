@@ -3,9 +3,14 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow-x: hidden;
+    }
     html {
-      background: url(background.png);
-      background-size: 100% auto;
+      background: url(background.png) no-repeat;
+      background-size: cover;
     }
     p, #score, form{
       text-align: center;
@@ -15,8 +20,8 @@
     }
     canvas {
       border:1px solid #d3d3d3;
-      background-color: #f1f1f1;
     }
+
   </style>
   <script src="jquery-2.1.4.min.js"></script>
 </head>
@@ -29,9 +34,8 @@
 </div>
 
 <br>
-<p> you can use arrow key and 'z', 'x'</p>
-<div id="score"></div>
-<form><input type="submit"></form>
+<p style="color: purple; font-size: 15pt; text-shadow: 0 0 2px #f00;"> you can use arrow key and 'z', 'x'</p>
+<div id="score" style="color: purple; font-size: 15pt; text-shadow: 0 0 2px #f00;"></div>
 
 <script>
 
@@ -134,9 +138,9 @@
       clearInterval(eventId);
       var img = new Image();
       img.onload = function (){
-        myGameArea.context.drawImage(img, puyoSize, 5*puyoSize, puyoSize*4, 2*puyoSize);
+        myGameArea.context.drawImage(img, puyoSize, 5*puyoSize, puyoSize*4, 4*puyoSize);
       }
-      img.src = 'game_over.jpg';
+      img.src = 'Game-over-yoshi.jpg';
     }
     else {
       myMap[this.i][this.j] = this.color1;
