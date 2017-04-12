@@ -167,12 +167,12 @@
     this.canRotate = function(dir) {
       if(dir == 0) {
         // 벽에 붙은경우
-        if(this.j == 0 && this.nextDir == 0) {
-          if(myMap[this.i][1] == -1)  return true;
+        if((this.j == 0 || myMap[this.i][this.j-1] != -1) && this.nextDir == 0) {
+          if(this.j+1 < 6 && myMap[this.i][this.j+1] == -1)  return true;
           return false;
         }
-        else if(this.j == 5 && this.nextDir == 2) {
-          if(myMap[this.i][4] == -1)  return true;
+        else if((this.j == 5 || myMap[this.i][this.j+1] != -1) && this.nextDir == 2) {
+          if(this.j-1 >= 0 && myMap[this.i][this.j-1] == -1)  return true;
           return false;
         }
         // 나머지경우
@@ -184,12 +184,12 @@
       }
       else {
         // 벽에 붙은경우
-        if(this.j == 0 && this.nextDir == 2) {
-          if(myMap[this.i][1] == -1)  return true;
+        if((this.j == 0 || myMap[this.i][this.j-1] != -1) && this.nextDir == 2) {
+          if(this.j+1 < 6 && myMap[this.i][this.j+1] == -1)  return true;
           return false;
         }
-        else if(this.j == 5 && this.nextDir == 0) {
-          if(myMap[this.i][4] == -1)  return true;
+        else if((this.j == 5 || myMap[this.i][this.j+1] != -1) && this.nextDir == 0) {
+          if(this.j-1 >= 0 && myMap[this.i][this.j-1] == -1)  return true;
           return false;
         }
         // 나머지경우
@@ -203,7 +203,7 @@
 
     this.Rotate = function(dir) {
       if(dir == 0) {
-        if(this.j == 0 && this.nextDir == 0) {
+        if((this.j == 0 || myMap[this.i][this.j-1] != -1) && this.nextDir == 0) {
           myMap[this.i][this.j] = -1;
           myMap[this.i-1][this.j] = -1;
 
@@ -213,7 +213,7 @@
           myMap[this.i][this.j] = color1;
           myMap[this.i][this.j-1] = color2;
         }
-        else if(this.j == 5 && this.nextDir == 2) {
+        else if((this.j == 5 || myMap[this.i][this.j+1] != -1) && this.nextDir == 2) {
           myMap[this.i][this.j] = -1;
           myMap[this.i+1][this.j] = -1;
 
@@ -230,7 +230,7 @@
         }
       }
       else {
-        if(this.j == 0 && this.nextDir == 2) {
+        if((this.j == 0 || myMap[this.i][this.j-1] != -1) && this.nextDir == 2) {
           myMap[this.i][this.j] = -1;
           myMap[this.i+1][this.j] = -1;
 
@@ -240,7 +240,7 @@
           myMap[this.i][this.j] = color1;
           myMap[this.i][this.j-1] = color2;
         }
-        else if(this.j == 5 && this.nextDir == 0) {
+        else if((this.j == 5 || myMap[this.i][this.j+1] != -1) && this.nextDir == 0) {
           myMap[this.i][this.j] = -1;
           myMap[this.i-1][this.j] = -1;
 
