@@ -130,7 +130,15 @@
   };
 
   function startGame() {
-    puyoSize = 40;
+
+    var filter = ["win16","win32","win64","mac"];
+
+    alert(navigator.platform.toLowerCase());
+    if(0 > filter.indexOf(navigator.platform.toLowerCase())){
+      puyoSize = 30; // Mobile
+    }else{
+      puyoSize = 40; // PC
+    }
 
     var cnt = 0;
     img = new Array();
