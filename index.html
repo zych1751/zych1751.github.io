@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" type="text/css" href="index.css">
   <script src="jquery-2.1.4.min.js"></script>"
@@ -130,15 +131,7 @@
   };
 
   function startGame() {
-
-    var filter = ["win16","win32","win64","mac"];
-
-    alert(navigator.platform.toLowerCase());
-    if(0 > filter.indexOf(navigator.platform.toLowerCase())){
-      puyoSize = 30; // Mobile
-    }else{
-      puyoSize = 40; // PC
-    }
+    puyoSize = 40; // PC
 
     var cnt = 0;
     img = new Array();
