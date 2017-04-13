@@ -11,6 +11,7 @@
     html {
       background: url(background.png) no-repeat;
       background-size: cover;
+      text-align: center;
     }
     p, #score, form{
       text-align: center;
@@ -27,10 +28,11 @@
 </head>
 <body onload="startGame()">
 
+<img src="loading.png" id="loading"/>
 
 <div style="margin: 3% auto; width: 50%;">
-  <canvas id="canvas1"></canvas>
-  <canvas id="canvas2"></canvas>
+  <canvas id="canvas1" style="display:none"></canvas>
+  <canvas id="canvas2" style="display:none"></canvas>
 </div>
 
 <br>
@@ -52,6 +54,10 @@
   var img;
 
   function init() {
+    document.getElementById("canvas1").setAttribute("style", "display:inline");
+    document.getElementById("canvas2").setAttribute("style", "display:inline");
+    document.getElementById("loading").setAttribute("style", "display:none");
+
     firstMake = true;
     gameTime = 20;
     colorNum = 4;
