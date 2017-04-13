@@ -27,6 +27,10 @@
 <div id="score" class="color"></div>
 
 <script>
+  document.ontouchstart = function(e){
+    e.preventDefault();
+  }
+
   var currentPuyo;
   var myMap; // color information, -1 : empty
   var endFlag;
