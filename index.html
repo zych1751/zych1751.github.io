@@ -2,45 +2,30 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <style>
-    html, body {
-      margin: 0;
-      height: 100%;
-      overflow-x: hidden;
-    }
-    html {
-      background: url(background.png) no-repeat;
-      background-size: cover;
-      text-align: center;
-    }
-    p, #score, form{
-      text-align: center;
-    }
-    div {
-      text-align: center;
-    }
-    canvas {
-      border:1px solid #d3d3d3;
-    }
-
-  </style>
-  <script src="jquery-2.1.4.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="index.css">
+  <script src="jquery-2.1.4.min.js"></script>"
 </head>
 <body onload="startGame()">
 
 <img src="loading.png" id="loading"/>
 
-<div style="margin: 3% auto; width: 50%;">
-  <canvas id="canvas1" style="display:none"></canvas>
-  <canvas id="canvas2" style="display:none"></canvas>
+<div style="" id="game_board">
+  <div class="container">
+    <div class="background"></div>
+    <canvas id="canvas1" style="display:none"></canvas>
+  </div>
+  <div class="container">
+    <div class="background"></div>
+    <canvas id="canvas2" style="display:none"></canvas>
+  </div>
 </div>
 
 <br>
-<p style="color: purple; font-size: 15pt; text-shadow: 0 0 2px #f00;"> you can use arrow key and 'z', 'x'</p>
-<div id="score" style="color: purple; font-size: 15pt; text-shadow: 0 0 2px #f00;"></div>
+<p id="pc_control" class="color"> you can use arrow key and 'z', 'x'</p>
+<p id="mobile_control" class="color">touch: rotate, drag: move</p>
+<div id="score" class="color"></div>
 
 <script>
-
   var currentPuyo;
   var myMap; // color information, -1 : empty
   var endFlag;
@@ -84,8 +69,65 @@
     maxChain = curChain = 0;
     myGameArea.start();
     myGameArea2.start();
-    window.addEventListener('keydown', move);
+    document.addEventListener('keydown', move);
+    document.addEventListener('touchstart', handleTouchStart, false);
+    document.addEventListener('touchmove', handleTouchMove, false);
+    document.addEventListener('touchend', handleTouchEnd, false);
   }
+
+  var xDown = null;
+  var yDown = null;
+  var touchMove;
+
+  function handleTouchEnd(evt) {
+    if(touchMove) return;
+
+    if(currentPuyo.canRotate(1))
+      currentPuyo.Rotate(1);
+  }
+
+  function handleTouchStart(evt) {
+    xDown = evt.touches[0].clientX;
+    yDown = evt.touches[0].clientY;
+    touchMove = false;
+  };
+
+  function handleTouchMove(evt) {
+    if ( ! xDown || ! yDown ) {
+      return;
+    }
+
+    touchMove = true;
+    var xUp = evt.touches[0].clientX;
+    var yUp = evt.touches[0].clientY;
+
+    var xDiff = xDown - xUp;
+    var yDiff = yDown - yUp;
+
+    if(yDiff < -7.5) {
+      /* down swipe*/
+      if(currentPuyo.canMove(2))
+        currentPuyo.Move(2);
+      xDown = null;
+      yDown = null;
+      return;
+    }
+
+    if(Math.abs(xDiff) < 7.5) return;
+
+    if ( xDiff > 0 ) {
+      /* left swipe */
+      if(currentPuyo.canMove(3))
+        currentPuyo.Move(3);
+    } else {
+      /* right swipe */
+      if(currentPuyo.canMove(1))
+        currentPuyo.Move(1);
+    }
+    /* reset values */
+    xDown = null;
+    yDown = null;
+  };
 
   function startGame() {
     puyoSize = 40;
@@ -115,7 +157,14 @@
       this.canvas.height = puyoSize*13;
       this.context = this.canvas.getContext("2d");
       this.frameNo = 0;
-      eventId = setInterval(updateGameArea, 20);
+
+      var filter = ["win16","win32","win64","mac"];
+
+      if(0 > filter.indexOf(navigator.platform.toLowerCase())){
+        eventId = setInterval(updateGameArea, 30); // Mobile
+      }else{
+        eventId = setInterval(updateGameArea, 20); // PC
+      }
     },
     clear : function() {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -140,7 +189,10 @@
 
     if(myMap[this.i][this.j] != -1 || myMap[this.i-1][this.j] != -1) {
       endFlag = true;
-      window.removeEventListener('keydown', move);
+      document.removeEventListener('keydown', move);
+      document.removeEventListener('touchstart', move);
+      document.removeEventListener('touchmove', move);
+      document.removeEventListener('touchend', move);
       clearInterval(eventId);
       var img = new Image();
       img.onload = function (){
@@ -498,7 +550,7 @@
       this.canvas.height = puyoSize*5;
       this.context = this.canvas.getContext("2d");
       this.frameNo = 0;
-      eventId = setInterval(updateSideArea, 20);
+      eventId = setInterval(updateSideArea, 50);
     },
     clear : function() {
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
