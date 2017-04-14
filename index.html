@@ -31,6 +31,14 @@
     e.preventDefault();
   }
 
+  var filter = ["win16","win32","win64","mac"];
+
+  if(0 > filter.indexOf(navigator.platform.toLowerCase())){
+    document.getElementById("pc_control").setAttribute("style", "display:none"); // Mobile
+  }else{
+    document.getElementById("mobile_control").setAttribute("style", "display:none"); // PC
+  }
+
   var currentPuyo;
   var myMap; // color information, -1 : empty
   var endFlag;
@@ -136,8 +144,6 @@
 
   function startGame() {
     $("donotscrollme").on("touchmove", false);
-
-    var filter = ["win16","win32","win64","mac"];
 
     if(0 > filter.indexOf(navigator.platform.toLowerCase())){
       puyoSize = 30; // Mobile

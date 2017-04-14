@@ -61,10 +61,4 @@ canvas {
   .color {
     font-size: 12pt;
   }
-  #pc_control {
-    display: none;
-  }
-  #mobile_control {
-    display: inline;
-  }
 }
