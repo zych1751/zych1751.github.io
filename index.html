@@ -35,6 +35,7 @@
 
   if(0 > filter.indexOf(navigator.platform.toLowerCase())){
     document.getElementById("pc_control").setAttribute("style", "display:none"); // Mobile
+    document.getElementById("mobile_control").setAttribute("style", "display:inline"); // PC
   }else{
     document.getElementById("mobile_control").setAttribute("style", "display:none"); // PC
   }
